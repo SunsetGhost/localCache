@@ -1,0 +1,41 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+jar {
+	baseName = 'localCache'
+	version = '1.0.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def spring4Version = '4.1.3.RELEASE'
+
+dependencies {
+	compile ('org.slf4j:jcl-over-slf4j:1.7.25') { transitive = false }
+	compile ('org.slf4j:log4j-over-slf4j:1.7.12') { transitive = false }
+	compile ('org.slf4j:slf4j-api:1.7.25') { transitive = false }
+	compile ('ch.qos.logback:logback-classic:1.2.3') { transitive = false }
+	compile ('ch.qos.logback:logback-core:1.2.3') { transitive = false }
+
+	compile ('com.google.code.gson:gson:2.3.1') { transitive = false }
+
+	compile ('com.google.guava:guava:23.0') { transitive = false }
+
+	compile ('org.springframework:spring-beans:' + spring4Version)  { transitive = false }
+    compile ('org.springframework:spring-context:' + spring4Version)  { transitive = false }
+    compile ('org.springframework:spring-context-support:' + spring4Version)  { transitive = false }
+    compile ('org.springframework:spring-core:' + spring4Version)  { transitive = false }
+    compile ('org.springframework:spring-expression:' + spring4Version)  { transitive = false }
+
+	compile fileTree(dir: rootProject.projectDir.absolutePath + '/lib', include: '*.jar')
+}
+
+task createDirs {
+	sourceSets*.java.srcDirs*.each { it.mkdirs() }
+	sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+}
