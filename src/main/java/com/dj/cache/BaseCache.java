@@ -21,7 +21,7 @@ public abstract class BaseCache<K, V> implements ICache<K, V>, InitializingBean,
 	}
 	
 	public void afterPropertiesSet() throws Exception {
-		// TODO
+		CacheManager.getInstance().register(this); // 缓存需要被缓存管理器管理，故注册到缓存管理器
 	}
 
 	@Override
