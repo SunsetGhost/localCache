@@ -51,7 +51,7 @@ public class IncrementLoadCache<K, V> extends BaseGuavaCache<K, V> implements IT
 		if(this.cacheProvider != null) {
 			this.logger.info("RefreshCache {} start.", super.getName());
             this.cacheProvider.incrementLoad(this);
-            this.logger.info("RefreshCache {} end.", super.getName());
+            this.logger.info("RefreshCache {} end. Cache size: {}", super.getName(), this.getCache().size());
 		}
 	}
 	
@@ -71,6 +71,26 @@ public class IncrementLoadCache<K, V> extends BaseGuavaCache<K, V> implements IT
 			};
 		}
 		return null;
+	}
+
+	public int getRefreshInterval() {
+		return refreshInterval;
+	}
+
+	public void setRefreshInterval(int refreshInterval) {
+		this.refreshInterval = refreshInterval;
+	}
+
+	public IIncrementLoadCacheProvider<K, V> getCacheProvider() {
+		return cacheProvider;
+	}
+
+	public void setCacheProvider(IIncrementLoadCacheProvider<K, V> cacheProvider) {
+		this.cacheProvider = cacheProvider;
+	}
+
+	public void setCacheTaskScheduler(CacheTaskScheduler cacheTaskScheduler) {
+		this.cacheTaskScheduler = cacheTaskScheduler;
 	}
 
 }
