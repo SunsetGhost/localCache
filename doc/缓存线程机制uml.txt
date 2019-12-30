@@ -1,0 +1,246 @@
+@startuml
+
+interface InitializingBean {
+    + void afterPropertiesSet()
+}
+
+interface BeanFactoryAware {
+    + void setBeanFactory(BeanFactory beanFactory) throws BeansException
+}
+
+interface ICache<K, V> {
+    + String getName()
+    + V get(K p0)
+    + Map<K, V> get(Collection<K> p0)
+    + Map<K, V> getAll()
+    + void put(K p0, V p1)
+    + void put(Map<? extends K, ? extends V> p0)
+    + void remove(K p0)
+    + void remove(Collection<K> p0)
+    + void removeAll()
+}
+
+abstract class BaseCache<K, V> {
+    - String name
+    # BeanFactory beanFactory
+    
+    + <T> T getBean(String name, Class<T> requiredType) throws BeansException
+    + void afterPropertiesSet()
+    + String getName()
+    + void setName(String name)
+}
+
+class CacheManager {
+    - {static} CacheManager instance
+    - Map<String, ICache<?, ?>> caches
+    - Map<String, CacheTaskScheduler> cacheTasks
+    - final Logger logger
+    - {static} Thread scheduleThread
+    - {static} long scheduleInterval
+
+    - CacheManager()
+    + {static} CacheManager getInstance()
+    + synchronized void startScheduleThread()
+    ~ void register(final ICache<?, ?> cache)
+    + <K, V> ICache<K, V> getCache(final String name)
+}
+
+CacheTaskScheduler <.. CacheManager
+
+interface Runnable {
+    + void run()
+}
+
+class Thread {
+}
+
+class ScheduleThread {
+    + ScheduleThread()
+    + void run()
+    + void doRun()
+}
+
+interface ITaskSchedulerCache {
+    + CacheTaskScheduler getCacheTask()
+}
+
+together {
+
+class CacheTaskScheduler {
+    - final SCHEDULE_MODE mode
+    - long intervalMillis
+    - long lastRunTimeMillis
+    - Pattern timePattern
+
+    + CacheTaskScheduler(String timePattern)
+    + CacheTaskScheduler(final int interval)
+    + boolean isTimeForSchedule(final long timeMillis)
+    - boolean isTimeForScheduleInterval(final long timeMillis)
+    - boolean isTimeForScheduleTimePattern(final long timeMillis)
+    + long getLastRunTimeMillis()
+    + void setLastRunTimeMillis(final long lastRunTimeMillis)
+}
+
+enum SCHEDULE_MODE {
+    INTERVAL, 
+    TIME_PATTERN;
+}
+}
+
+abstract class BaseGuavaCache<K, V> {
+    # {static} final int UNSET = -1
+    # volatile Cache<K, V> cache
+    - long maximumSize
+    - int expiredAfterAccess
+    - int expiredAfterWrite
+
+    + BaseGuavaCache()
+    # {abstract} void initCache()
+    + void afterPropertiesSet() throws Exception
+    + long getMaximumSize()
+    + void setMaximumSize(final long maximumSize)
+    + int getExpiredAfterAccess()
+    + void setExpiredAfterAccess(final int expiredAfterAccess)
+    + int getExpiredAfterWrite()
+    + void setExpiredAfterWrite(final int expiredAfterWrite)
+    + Cache<K, V> getCache()
+
+    + void put(final K key, final V value)
+    + void put(final Map<? extends K, ? extends V> m)
+    + void remove(final K key)
+    + void remove(final Collection<K> keys)
+    + void removeAll()
+    + V get(final K key)
+    + Map<K, V> get(final Collection<K> keys)
+    + Map<K, V> getAll()
+
+    # <E, F> Cache<E, F> buildCache()
+    # <E, F> Cache<E, F> buildCache(final CacheLoader<E, F> cacheLoader)
+    + void setCache(final Cache<K, V> cache)
+}
+
+together {
+
+together {
+interface IFullLoadCacheProvider<K, V> {
+    + Map<? extends K, ? extends V> reload()
+}
+class FullLoadCache<K, V> #GreenYellow/LightGoldenRodYellow {
+    # Logger logger
+    # IFullLoadCacheProvider<K, V> cacheProvider
+    # String cacheProviderBean
+    - boolean preLoad
+    - int refreshInterval
+    - String refreshTimePattern
+    - CacheTaskScheduler cacheTask
+
+    + FullLoadCache()
+    + int getRefreshInterval()
+    + void setRefreshInterval(final int refreshInterval)
+    + boolean isPreLoad()
+    + void setPreLoad(final boolean preLoad)
+    # void initCache()
+    - CacheTaskScheduler createCacheTask()
+    - void refreshCache(final boolean clear)
+    + CacheTaskScheduler getCacheTask()
+    + void setRefreshTimePattern(final String refreshTimePattern)
+    + void setCacheProvider(final IFullLoadCacheProvider<K, V> cacheProvider)
+    + IFullLoadCacheProvider<K, V> getCacheProvider()
+    + String getCacheProviderBean()
+    + void setCacheProviderBean(final String cacheProviderBean)
+}
+}
+
+together {
+interface IncrementLoadCacheProvider<K, V> {
+    + void incrementLoad(final ICache<K, V> p0)
+}
+class IncrementLoadCache<K, V> #GreenYellow/LightGoldenRodYellow {
+    # Logger logger
+    - boolean preLoad
+    - int refreshInterval
+    - String refreshTimePattern
+    - CacheTaskScheduler cacheTask
+    # IncrementLoadCacheProvider<K, V> cacheProvider
+    # String cacheProviderBean
+
+    + IncrementLoadCache()
+    # void initCache()
+    - void refreshCache()
+    - CacheTaskScheduler createCacheTask()
+    + CacheTaskScheduler getCacheTask()
+    + void setPreLoad(final boolean preLoad)
+    + void setRefreshInterval(final int refreshInterval)
+    + void setRefreshTimePattern(final String refreshTimePattern)
+    + void setCacheProvider(final IncrementLoadCacheProvider<K, V> cacheProvider)
+    + void setCacheProviderBean(final String cacheProviderBean)
+    + IncrementLoadCacheProvider<K, V> getCacheProvider()
+    + String getCacheProviderBean()
+}
+}
+
+together {
+interface ICacheProvider<K, V> {
+    + V getData(final K p0)
+}
+class LazyLoadCache<K, V> #GreenYellow/LightGoldenRodYellow {
+    # Logger logger
+    # ICacheProvider<K, V> cacheProvider
+    # String cacheProviderBean
+    - Cache<K, Optional<V>> optionalValueCache
+
+     # void initCache()
+}
+}
+
+class SimpleCache<K, V> #GreenYellow/LightGoldenRodYellow {
+    # void initCache()
+}
+}
+
+class ThreadUtils {
+    + {static} synchronized ExecutorService getThreadPoolExecutor()
+    + {static} void execute(final Runnable runnable)
+}
+
+ThreadUtils --> Runnable
+
+SimpleCache --|> BaseGuavaCache
+
+LazyLoadCache --|> BaseGuavaCache
+
+LazyLoadCache ---> ICacheProvider
+
+IncrementLoadCache --|> BaseGuavaCache
+
+IncrementLoadCache ..|> ITaskSchedulerCache
+
+IncrementLoadCache --> CacheTaskScheduler
+
+IncrementLoadCache ---> IncrementLoadCacheProvider
+
+FullLoadCache ---> IFullLoadCacheProvider
+
+FullLoadCache --> CacheTaskScheduler
+
+ITaskSchedulerCache <|.. FullLoadCache
+
+BaseGuavaCache <|-- FullLoadCache
+
+BaseCache <|- BaseGuavaCache
+
+BaseCache ..> CacheManager
+
+CacheTaskScheduler +-- SCHEDULE_MODE
+
+Runnable <|.. CacheTaskScheduler
+
+Thread <|-- ScheduleThread
+
+CacheManager +-- ScheduleThread
+ICache <|.. BaseCache
+InitializingBean <|.. BaseCache
+BeanFactoryAware <|.. BaseCache
+
+CacheManager ..> ThreadUtils
+@enduml
